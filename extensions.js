@@ -1,5 +1,13 @@
 // extensions.js
 const { faker } = require('@faker-js/faker');
+const bcrypt = require('bcrypt');
+
+function randomString(length) {
+  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#_-+*^%`~/>,?<';
+  let result = '';
+  for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+  return result;
+}
 
 module.exports = {
   randomCountryID: () => {
@@ -32,5 +40,11 @@ module.exports = {
   },
   randomPhoneNumber: () => {
     return faker.phone.phoneNumber('+48 111 ### ####');
+  },
+  randomPassword: (_, __, record) => {
+    // record is a hash of { key => value } for this record
+    const newPassword = randomString(10)
+    const salt = bcrypt.genSaltSync(13, 'a');
+    return bcrypt.hashSync(newPassword, salt);
   }
 };

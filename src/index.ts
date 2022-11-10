@@ -16,6 +16,16 @@ function postgreSQLDate(date: Date) {
   return date.toISOString().replace(/T/, " ").replace(/\..+/, "");
 }
 
+// class FieldValue {
+//   v: string | null | void | undefined;
+// }
+// interface HashTable<T> {
+//   [key: string]: T;
+// }
+interface Record {
+  [name: string]: string|number|undefined|null
+}
+
 // These arguments, if passed through to pg_dump, will break pg-anonymizer.
 const pgDumpArgsBlacklist = ["-f", "--file", "-F", "--format", "-V", "--version", "-?", "--help"];
 
@@ -201,13 +211,18 @@ class PgAnonymizer extends Command {
                   return faker[two][three]();
                 }
                 if (replacement.startsWith("extension.")) {
+                  const row: Record = {}
+                  const fields = line.split("\t")
+                  cols.forEach((value, _index) => {
+                    row[value] = fields[_index] == '\\N' ? null : fields[_index];
+                  })
                   const functionPath = replacement.split(".");
                   return functionPath.reduce((acc: any, key: any) => {
                     if (acc[key]) {
                       return acc[key];
                     }
                     return acc;
-                  }, extension)(v, table);
+                  }, extension)(v, table, row);
                 }
                 return replacement;
               }
