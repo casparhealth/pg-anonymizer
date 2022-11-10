@@ -38,9 +38,7 @@ function sanitizePgDumpArgs(argv: string[]) {
 
 class PgAnonymizer extends Command {
   static description = "dump anonymized database";
-
   static strict = false;
-
   static usage = "[OPTIONS] [--] [PGARG]...";
 
   // Named args aren't actually used; this exists for documentation purposes
