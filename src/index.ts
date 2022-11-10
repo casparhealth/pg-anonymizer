@@ -179,8 +179,7 @@ class PgAnonymizer extends Command {
               cols.filter((v, k) => indices.includes(k)).join(", ")
           );
         else console.error("No columns to anonymize");
-      }
-      else if (table && line.trim() && (line !== "\\.")) {
+      } else if (table && line.trim() && (line !== "\\.")) {
         line = line
           .split("\t")
           .map((v, k) => {
