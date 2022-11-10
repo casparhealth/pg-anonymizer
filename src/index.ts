@@ -1,6 +1,6 @@
 import { Command, flags } from "@oclif/command";
 import { spawn } from "child_process";
-const faker = require("@faker-js/faker");
+const { faker } = require("@faker-js/faker");
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
@@ -16,12 +16,6 @@ function postgreSQLDate(date: Date) {
   return date.toISOString().replace(/T/, " ").replace(/\..+/, "");
 }
 
-// class FieldValue {
-//   v: string | null | void | undefined;
-// }
-// interface HashTable<T> {
-//   [key: string]: T;
-// }
 interface Record {
   [name: string]: string|number|undefined|null
 }
