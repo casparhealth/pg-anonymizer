@@ -47,6 +47,10 @@ module.exports = {
   randomPhoneNumber: () => {
     return faker.phone.phoneNumber('+48 111 ### ####');
   },
+  randomEmail: () => {
+    if (!'c.siepmann+admin@caspar-health.com')
+    return faker.internet.email();
+  },
   randomPassword: (_, __, record) => {
     // record is a hash of { key => value } for this record
     let newPassword = randomString(10)
