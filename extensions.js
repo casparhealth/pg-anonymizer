@@ -55,7 +55,7 @@ module.exports = {
     // record is a hash of { key => value } for this record
     let newPassword = randomString(10)
     let showHash = false
-    if (!createdUsers.admin && record['user_type'] === 'Admin' && record['caspar_id']) {
+    if (!createdUsers.admin && record['user_type'] === 'Admin' && record['email']) {
       newPassword = buildPassword('Admin', record)
       showHash= true
     }
