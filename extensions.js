@@ -9,14 +9,10 @@ function randomString(length) {
   return result;
 }
 
-let createdUsers = { admin: null, clinic: null }
-
-function buildPassword(userType, record) {
-  const userKind = userType.toLowerCase()
+function getPassword(userType, record) {
   console.log(`setting ${userType} credentials`)
-  createdUsers[userKind] = record
-  console.log('Account id:', record['id'], 'caspar_id:', record['caspar_id'])
-  return process.env[`${userKind}_password`]
+  console.log('Account id:', record['id'], 'caspar_id:', record['caspar_id'], 'email:', record['email'])
+  return process.env[`${userType}_password`]
 }
 
 module.exports = {
@@ -55,19 +51,27 @@ module.exports = {
     // record is a hash of { key => value } for this record
     let newPassword = randomString(10)
     let showHash = false
-    if (!createdUsers.admin && record['user_type'] === 'Admin' && record['email']) {
-      newPassword = buildPassword('Admin', record)
+
+    if (!record) {
+      return null;
+    }
+
+    if (record['user_type'] === 'Admin' && record['email'] === process.env['admin_email']) {
+      newPassword = getPassword('admin', record)
       showHash= true
     }
-    if (!createdUsers.clinic && record['user_type'] === 'Clinic' && record['caspar_id']) {
-      newPassword = buildPassword('Clinic', record)
+
+    if (record['user_type'] === 'Clinic' && record['caspar_id'] === process.env['clinic_id']) {
+      newPassword = getPassword('clinic', record)
       showHash= true
     }
+
     let salt = bcrypt.genSaltSync(13, 'a'); // move this to line #13 to gain performance improvement
     const hash = bcrypt.hashSync(newPassword, salt);
     if (showHash) {
       console.log('HASH:', hash)
     }
+
     return hash
   }
 };
