@@ -47,9 +47,11 @@ module.exports = {
   randomPhoneNumber: () => {
     return faker.phone.phoneNumber('+48 111 ### ####');
   },
-  randomEmail: () => {
-    if (!'c.siepmann+admin@caspar-health.com')
+  randomEmail: (_, __, record) => {
+    // if (!'c.siepmann+admin@caspar-health.com') {
+    console.log(record)
     return faker.internet.email();
+    // }
   },
   randomPassword: (_, __, record) => {
     // record is a hash of { key => value } for this record
