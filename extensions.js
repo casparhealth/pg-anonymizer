@@ -9,12 +9,6 @@ function randomString(length) {
   return result;
 }
 
-function getPassword(userType, record) {
-  console.log(`setting ${userType} credentials`)
-  console.log('Account id:', record['id'], 'caspar_id:', record['caspar_id'], 'email:', record['email'])
-  return process.env[`${userType}_password`]
-}
-
 module.exports = {
   randomCountryID: () => {
     return faker.datatype.number({ min: 1, max: 231 });
@@ -48,36 +42,16 @@ module.exports = {
     return faker.phone.phoneNumber('+48 111 ### ####');
   },
   randomEmail: (_, __, record) => {
-    // if (!'c.siepmann+admin@caspar-health.com') {
-    console.log(record)
-    return faker.internet.email();
-    // }
+  	if (record === process.env['admin_email']) {
+      console.log(record)
+      return record
+    }
+    return faker.internet.email()
   },
-  randomPassword: (_, __, record) => {
+  randomPassword: () => {
     // record is a hash of { key => value } for this record
     let newPassword = randomString(10)
-    let showHash = false
-
-    if (!record) {
-      return null;
-    }
-
-    if (record['user_type'] === 'Admin' && record['email'] === process.env['admin_email']) {
-      newPassword = getPassword('admin', record)
-      showHash= true
-    }
-
-    if (record['user_type'] === 'Clinic' && record['caspar_id'] === process.env['clinic_id']) {
-      newPassword = getPassword('clinic', record)
-      showHash= true
-    }
-
     let salt = bcrypt.genSaltSync(13, 'a'); // move this to line #13 to gain performance improvement
-    const hash = bcrypt.hashSync(newPassword, salt);
-    if (showHash) {
-      console.log('HASH:', hash)
-    }
-
-    return hash
+    return bcrypt.hashSync(newPassword, salt);
   }
 };
