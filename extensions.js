@@ -1,6 +1,5 @@
 // extensions.js
 const { faker } = require('@faker-js/faker');
-const bcrypt = require('bcrypt');
 
 module.exports = {
   randomCountryID: () => {
@@ -45,7 +44,6 @@ module.exports = {
     const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#_-+*^%`~/>,?<';
     let result = '';
     let length = 10;
-    console.log('Generate random string')
     for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
     return result;
   }
