@@ -2,14 +2,6 @@
 const { faker } = require('@faker-js/faker');
 const bcrypt = require('bcrypt');
 
-function randomString(length) {
-  const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#_-+*^%`~/>,?<';
-  let result = '';
-  console.log('Generate random string')
-  for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
-  return result;
-}
-
 module.exports = {
   randomCountryID: () => {
     return faker.datatype.number({ min: 1, max: 231 });
@@ -42,7 +34,7 @@ module.exports = {
   randomPhoneNumber: () => {
     return faker.phone.phoneNumber('+48 111 ### ####');
   },
-  randomEmail: (_, __, record) => {
+  randomEmail: (record) => {
   	if (record === process.env['admin_email']) {
       console.log(record)
       return record
@@ -50,11 +42,11 @@ module.exports = {
     return faker.internet.email()
   },
   randomPassword: () => {
-    // record is a hash of { key => value } for this record
-    let newPassword = randomString(10)
-    console.log('Generate salt')
-    let salt = bcrypt.genSaltSync(13, 'a'); // move this to line #13 to gain performance improvement
-    console.log('Generate hash')
-    return bcrypt.hashSync(newPassword, salt);
+    const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#_-+*^%`~/>,?<';
+    let result = '';
+    let length = 10;
+    console.log('Generate random string')
+    for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+    return result;
   }
 };
