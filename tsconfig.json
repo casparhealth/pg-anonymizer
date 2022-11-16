@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "esModuleInterop": true,
+    "moduleResolution": "Node",
     "declaration": true,
     "importHelpers": true,
     "module": "commonjs",
