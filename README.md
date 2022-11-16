@@ -1,12 +1,24 @@
 pg-anonymizer
 =============
 
+## CASPAR - How to use anonymizer script
+
+```bash
+$ PGHOST="<PG_HOST_URL>" \
+  PGUSER="<PG_USER>" \
+  PGPASSWORD="<PG_USER_PASSWORD>" \
+  PGDATABASE="<PG_DB_NAME>" \ 
+  admin_email='<ADMIN_ACCOUNT_EMAIL>' \
+  ./pg-anonymizer.sh >> pg-anonymizer.log
+```
+
 Export your PostgreSQL database anonymized. Replace all sensitive data thanks to `faker`. Output to a file that you can easily import with `psql`.
 
 [![oclif](https://img.shields.io/badge/cli-oclif-brightgreen.svg)](https://oclif.io)
 [![Version](https://img.shields.io/npm/v/pg-anonymizer.svg)](https://npmjs.org/package/pg-anonymizer)
 [![Downloads](https://img.shields.io/npm/dt/pg-anonymizer.svg)](https://npmjs.org/package/pg-anonymizer)
 [![License](https://img.shields.io/npm/l/pg-anonymizer.svg)](https://github.com/rap2hpoutre/pg-anonymizer/blob/master/package.json)
+
 ## Usage
 
 Run this command by giving a connexion string and an output file name (no need to install first thanks to `npx`):
