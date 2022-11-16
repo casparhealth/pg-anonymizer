@@ -8,9 +8,6 @@ echo ""
 # 2 Setup the pg-anonymizer tool
 echo "### SETUP PG-ANONYMIZER TOOL ###"
 echo ""
-cd ~
-git clone https://github.com/casparhealth/pg-anonymizer.git
-cd pg-anonymizer
 npm install
 npm run prepack
 
