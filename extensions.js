@@ -55,5 +55,8 @@ module.exports = {
     const newPassword = randomString(10)
     const salt = bcrypt.genSaltSync(13, 'a');
     return bcrypt.hashSync(newPassword, salt);
+  },
+  randomClinicName: () => {
+    return `Clinic ${faker.datatype.number({ min: 1, max: 9999 })}`;
   }
 };
