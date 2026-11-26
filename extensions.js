@@ -1,6 +1,7 @@
 // extensions.js
 const { faker } = require('@faker-js/faker');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
 function randomString(length) {
   const chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#_-+*^%`~/>,?<';
@@ -22,8 +23,13 @@ module.exports = {
   replaceWithString: () => {
     return "Confidential";
   },
+  // pg_dump COPY text format: \N is SQL NULL. A JS null would be joined as "" instead.
   replaceWithNull: () => {
-    return null;
+    return "\\N";
+  },
+  // Unique random value for NOT NULL UNIQUE token columns.
+  randomToken: () => {
+    return crypto.randomBytes(24).toString('hex');
   },
   randomHeight: () => {
     return faker.datatype.number({ min: 150, max: 200 });
@@ -46,7 +52,8 @@ module.exports = {
       console.log(record)
       return record
     }
-    return faker.internet.email()
+    // example.com/.net/.org only, so stage can never mail a real inbox.
+    return faker.internet.exampleEmail()
   },
   randomPassword: () => {
     return randomString(10);

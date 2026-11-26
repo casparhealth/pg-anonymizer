@@ -52,3 +52,12 @@ psql -c "GRANT CONNECT,TEMPORARY ON DATABASE $PGDATABASE TO caspar; \
 echo "### LOAD THE $PGDATABASE DB ###"
 echo ""
 time psql $PGDATABASE < $PG_DB_FILE_NAME
+
+## 9 Verify the anonymisation
+echo "### VERIFY ANONYMISATION ###"
+echo ""
+if ! psql -v ON_ERROR_STOP=1 -v admin_email="$admin_email" -d "$PGDATABASE" -f validate-anonymization.sql; then
+  echo "### ANONYMISATION CHECK FAILED: DO NOT SNAPSHOT OR SHARE $PGDATABASE ###"
+  exit 1
+fi
+echo "### ANONYMISATION CHECK PASSED ###"
