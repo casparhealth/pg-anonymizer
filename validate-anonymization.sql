@@ -7,7 +7,7 @@
 
 SELECT set_config('anon.admin_email', :'admin_email', false);
 
--- Optional test inbox (anon_email_base=local@domain): faked emails are then local+anon<n>@domain.
+-- Optional test inbox (anon_email_base=local@domain): faked emails are then local+anondb<n>@domain.
 \if :{?anon_email_base}
 \else
   \set anon_email_base ''
@@ -15,7 +15,7 @@ SELECT set_config('anon.admin_email', :'admin_email', false);
 SELECT set_config('anon.email_plus_re',
   CASE WHEN :'anon_email_base' LIKE '%_@_%' THEN
     '^' || regexp_replace(split_part(:'anon_email_base', '@', 1), '([.+*?^$()\[\]{}|\\])', '\\\1', 'g')
-        || '\+anon[0-9]+@'
+        || '\+anondb[0-9]+@'
         || regexp_replace(split_part(:'anon_email_base', '@', 2), '([.+*?^$()\[\]{}|\\])', '\\\1', 'g') || '$'
   ELSE 'a^' END, false);
 
@@ -49,6 +49,8 @@ DECLARE
     ['push_tokens.token',                      'SELECT count(*) FROM push_tokens WHERE token !~ ''^[0-9a-f]{48}$'''],
     -- Faked emails use example.com/.net/.org or the anon_email_base plus address; the admin account is kept on purpose.
     ['accounts.email',                         'SELECT count(*) FROM accounts WHERE email IS NOT NULL AND email !~* ''@example\.(com|net|org)$'' AND email !~* current_setting(''anon.email_plus_re'') AND email <> current_setting(''anon.admin_email'')'],
+    -- Must stay 0: the backend's DeleteCypressTestAccountsWorker deletes these accounts daily on non-prod.
+    ['accounts.email (cleanup-job pattern)',   'SELECT count(*) FROM accounts WHERE email ~* ''^casparhealth\.test\+[0-9]+@gmail\.com$'''],
     ['clinic_infos.contact_email',             'SELECT count(*) FROM clinic_infos WHERE contact_email IS NOT NULL AND contact_email !~* ''@example\.(com|net|org)$'''],
     -- Columns found by the full audit (prod vs anonymised copy).
     ['audits.audited_changes',                 'SELECT count(*) FROM audits WHERE coalesce(audited_changes, ''{}'') <> ''{}'''],

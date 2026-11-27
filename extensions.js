@@ -53,13 +53,15 @@ module.exports = {
       return record
     }
     // With anon_email_base (e.g. casparhealth.test@gmail.com) every account gets a unique
-    // plus address on that test inbox: casparhealth.test+anon<n>@gmail.com.
+    // plus address on that test inbox: casparhealth.test+anondb<n>@gmail.com.
+    // The suffix must not be digits only: the backend's DeleteCypressTestAccountsWorker
+    // deletes casparhealth.test+<digits>@gmail.com accounts daily on non-prod.
     // Without it: example.com/.net/.org only, so stage can never mail a real inbox.
     const base = process.env['anon_email_base'];
     if (base && base.includes('@')) {
       const [local, domain] = base.split('@');
       emailCounter += 1;
-      return `${local}+anon${emailCounter}@${domain}`;
+      return `${local}+anondb${emailCounter}@${domain}`;
     }
     return faker.internet.exampleEmail()
   },
