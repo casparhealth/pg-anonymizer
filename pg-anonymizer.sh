@@ -52,3 +52,20 @@ psql -c "GRANT CONNECT,TEMPORARY ON DATABASE $PGDATABASE TO caspar; \
 echo "### LOAD THE $PGDATABASE DB ###"
 echo ""
 time psql $PGDATABASE < $PG_DB_FILE_NAME
+
+## 9 Reset the passwords of the login roles copied with the snapshot
+echo "### RESET ROLE PASSWORDS ###"
+echo ""
+if ! psql -v ON_ERROR_STOP=1 -d postgres -f reset-role-passwords.sql; then
+  echo "### ROLE PASSWORD RESET FAILED: DO NOT SNAPSHOT OR SHARE $PGDATABASE ###"
+  exit 1
+fi
+
+## 10 Verify the anonymisation
+echo "### VERIFY ANONYMISATION ###"
+echo ""
+if ! psql -v ON_ERROR_STOP=1 -v admin_email="$admin_email" -v anon_email_base="${anon_email_base:-}" -d "$PGDATABASE" -f validate-anonymization.sql; then
+  echo "### ANONYMISATION CHECK FAILED: DO NOT SNAPSHOT OR SHARE $PGDATABASE ###"
+  exit 1
+fi
+echo "### ANONYMISATION CHECK PASSED ###"

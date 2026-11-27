@@ -9,8 +9,13 @@ $ PGHOST="<PG_HOST_URL>" \
   PGPASSWORD="<PG_USER_PASSWORD>" \
   PGDATABASE="<PG_DB_NAME>" \ 
   admin_email='<ADMIN_ACCOUNT_EMAIL>' \
-  ./pg-anonymizer.sh >> pg-anonymizer.log
+  anon_email_base='<TEST_INBOX_EMAIL>' \
+  ./pg-anonymizer.sh >> pg-anonymizer.log 2>&1
 ```
+
+- `admin_email`: this account keeps its email so it can still log in.
+- `anon_email_base` (optional): every other account email becomes a unique plus address on this inbox, e.g. `test.inbox@example.org` → `test.inbox+anondb1@example.org`, `test.inbox+anondb2@example.org`, … The suffix always starts with letters: accounts with a digits-only suffix are removed by the daily test-account cleanup job on non-prod. Without it, emails become random `example.com/.net/.org` addresses that no one receives.
+- The script ends with `### ANONYMISATION CHECK PASSED ###`. If it prints `CHECK FAILED` instead, do not snapshot or share the database.
 
 Export your PostgreSQL database anonymized. Replace all sensitive data thanks to `faker`. Output to a file that you can easily import with `psql`.
 
