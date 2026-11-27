@@ -53,7 +53,15 @@ echo "### LOAD THE $PGDATABASE DB ###"
 echo ""
 time psql $PGDATABASE < $PG_DB_FILE_NAME
 
-## 9 Verify the anonymisation
+## 9 Reset the passwords of the login roles copied with the snapshot
+echo "### RESET ROLE PASSWORDS ###"
+echo ""
+if ! psql -v ON_ERROR_STOP=1 -d postgres -f reset-role-passwords.sql; then
+  echo "### ROLE PASSWORD RESET FAILED: DO NOT SNAPSHOT OR SHARE $PGDATABASE ###"
+  exit 1
+fi
+
+## 10 Verify the anonymisation
 echo "### VERIFY ANONYMISATION ###"
 echo ""
 if ! psql -v ON_ERROR_STOP=1 -v admin_email="$admin_email" -d "$PGDATABASE" -f validate-anonymization.sql; then

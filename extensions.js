@@ -65,5 +65,45 @@ module.exports = {
   },
   randomClinicName: () => {
     return `Clinic ${faker.datatype.number({ min: 1, max: 9999 })}`;
+  },
+
+  // The helpers below keep NULLs as NULL (\N) and only replace real values.
+  nullOrName: (v) => (isNull(v) ? v : faker.name.findName()),
+  nullOrConfidential: (v) => (isNull(v) ? v : "Confidential"),
+  nullOrPlanTitle: (v) => (isNull(v) ? v : "Therapy plan"),
+  nullOrFilename: (v) => (isNull(v) ? v : "document.pdf"),
+  nullOrUserAgent: (v) => (isNull(v) ? v : "Mozilla/5.0 (anonymised)"),
+  // Unique per clinic (index_patients_on_clinic_id_and_pkey), so it must stay unique.
+  nullOrRandomKey: (v) => (isNull(v) ? v : crypto.randomBytes(8).toString("hex")),
+  // NOT NULL columns that held names or prod links.
+  eventName: () => "Therapy session",
+  exampleUrl: () => "https://example.com/anonymised",
+  anonymisedS3Key: () => `anonymised/${crypto.randomBytes(12).toString("hex")}`,
+  // Chat integration metadata: keep only structural keys, drop name/email/conversation.
+  partnerMetadata: (v) => {
+    if (isNull(v)) return v;
+    try {
+      const src = JSON.parse(fromCopy(v));
+      const keep = {};
+      for (const k of ["id", "clinic_id", "primary_group", "role"]) {
+        if (k in src) keep[k] = src[k];
+      }
+      return toCopy(JSON.stringify(keep));
+    } catch (e) {
+      return "{}";
+    }
   }
 };
+
+function isNull(v) {
+  return v === "\\N";
+}
+
+// pg_dump COPY text format escapes backslash, tab, newline and carriage return.
+function fromCopy(v) {
+  return v.replace(/\\(.)/g, (_m, c) => ({ t: "\t", n: "\n", r: "\r", b: "\b", f: "\f", v: "\v" }[c] ?? c));
+}
+
+function toCopy(s) {
+  return s.replace(/\\/g, "\\\\").replace(/\t/g, "\\t").replace(/\n/g, "\\n").replace(/\r/g, "\\r");
+}

@@ -37,13 +37,45 @@ DECLARE
     ['push_tokens.token',                      'SELECT count(*) FROM push_tokens WHERE token !~ ''^[0-9a-f]{48}$'''],
     -- Faked emails use example.com/.net/.org; the configured admin account is kept on purpose.
     ['accounts.email',                         'SELECT count(*) FROM accounts WHERE email IS NOT NULL AND email !~* ''@example\.(com|net|org)$'' AND email <> current_setting(''anon.admin_email'')'],
-    ['clinic_infos.contact_email',             'SELECT count(*) FROM clinic_infos WHERE contact_email IS NOT NULL AND contact_email !~* ''@example\.(com|net|org)$''']
+    ['clinic_infos.contact_email',             'SELECT count(*) FROM clinic_infos WHERE contact_email IS NOT NULL AND contact_email !~* ''@example\.(com|net|org)$'''],
+    -- Columns found by the full audit (prod vs anonymised copy).
+    ['audits.audited_changes',                 'SELECT count(*) FROM audits WHERE coalesce(audited_changes, ''{}'') <> ''{}'''],
+    ['audits.remote_address',                  'SELECT count(*) FROM audits WHERE remote_address IS NOT NULL'],
+    ['notification_events.payload',            'SELECT count(*) FROM notification_events WHERE payload <> ''{}'''],
+    ['partner_integrations.metadata',          'SELECT count(*) FROM partner_integrations WHERE metadata ?| array[''email'',''name'',''conversation'',''custom'']'],
+    ['pay_charges.data/object',                'SELECT count(*) FROM pay_charges WHERE coalesce(data, ''{}'') <> ''{}'' OR coalesce(object, ''{}'') <> ''{}'''],
+    ['pay_customers.data/object',              'SELECT count(*) FROM pay_customers WHERE coalesce(data, ''{}'') <> ''{}'' OR coalesce(object, ''{}'') <> ''{}'''],
+    ['pay_payment_methods.data',               'SELECT count(*) FROM pay_payment_methods WHERE coalesce(data, ''{}'') <> ''{}'''],
+    ['pay_subscriptions.object',               'SELECT count(*) FROM pay_subscriptions WHERE coalesce(object, ''{}'') <> ''{}'''],
+    ['pay_webhooks.event',                     'SELECT count(*) FROM pay_webhooks WHERE coalesce(event, ''{}'') <> ''{}'''],
+    -- Faked pkeys are 16 hex chars; anything else came from prod.
+    ['patients.pkey',                          'SELECT count(*) FROM patients WHERE pkey !~ ''^[0-9a-f]{16}$'''],
+    ['patients.bmi',                           'SELECT count(*) FROM patients WHERE bmi IS NOT NULL'],
+    ['patients.other_employment_status',       'SELECT count(*) FROM patients WHERE other_employment_status IS NOT NULL'],
+    ['single_therapy_plans.therapy_goal',      'SELECT count(*) FROM single_therapy_plans WHERE therapy_goal <> ''Confidential'''],
+    ['single_therapy_plans.title',             'SELECT count(*) FROM single_therapy_plans WHERE title <> ''Therapy plan'''],
+    ['patient_journal_entries.reflection',     'SELECT count(*) FROM patient_journal_entries WHERE reflection <> ''Confidential'''],
+    ['patient_documents.original_filename',    'SELECT count(*) FROM patient_documents WHERE original_filename <> ''document.pdf'''],
+    ['patient_documents.s3_key',               'SELECT count(*) FROM patient_documents WHERE s3_key !~ ''^anonymised/'''],
+    ['therapy_schedules.event_name',           'SELECT count(*) FROM therapy_schedules WHERE event_name <> ''Therapy session'''],
+    ['therapy_schedule_changes.value_changes', 'SELECT count(*) FROM therapy_schedule_changes WHERE coalesce(value_changes, ''{}'') <> ''{}'''],
+    ['data_deletion_requests.requested_by',    'SELECT count(*) FROM data_deletion_requests WHERE requested_by IS NOT NULL'],
+    ['user_agents.user_agent',                 'SELECT count(*) FROM user_agents WHERE user_agent <> ''Mozilla/5.0 (anonymised)'''],
+    ['video_session_attendees.join_url',       'SELECT count(*) FROM video_session_attendees WHERE join_url <> ''https://example.com/anonymised'''],
+    ['announcements.attachment_token',         'SELECT count(*) FROM announcements WHERE attachment_token IS NOT NULL'],
+    ['announcements.original_filename',        'SELECT count(*) FROM announcements WHERE original_filename <> ''document.pdf''']
   ];
   n bigint;
   failed int := 0;
 BEGIN
   FOR i IN 1 .. array_length(checks, 1) LOOP
-    EXECUTE checks[i][2] INTO n;
+    BEGIN
+      EXECUTE checks[i][2] INTO n;
+    EXCEPTION WHEN undefined_table THEN
+      -- Table not in this schema version (e.g. an older dump): nothing to check.
+      RAISE NOTICE 'skip (table not present): %', checks[i][1];
+      CONTINUE;
+    END;
     IF n > 0 THEN
       failed := failed + 1;
       RAISE WARNING 'NOT ANONYMISED: % (% rows)', checks[i][1], n;
