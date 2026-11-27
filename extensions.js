@@ -52,7 +52,15 @@ module.exports = {
       console.log(record)
       return record
     }
-    // example.com/.net/.org only, so stage can never mail a real inbox.
+    // With anon_email_base (e.g. casparhealth.test@gmail.com) every account gets a unique
+    // plus address on that test inbox: casparhealth.test+anon<n>@gmail.com.
+    // Without it: example.com/.net/.org only, so stage can never mail a real inbox.
+    const base = process.env['anon_email_base'];
+    if (base && base.includes('@')) {
+      const [local, domain] = base.split('@');
+      emailCounter += 1;
+      return `${local}+anon${emailCounter}@${domain}`;
+    }
     return faker.internet.exampleEmail()
   },
   randomPassword: () => {
@@ -94,6 +102,9 @@ module.exports = {
     }
   }
 };
+
+// Counter for plus addresses; one anonymiser run handles all accounts, so it stays unique.
+let emailCounter = 0;
 
 function isNull(v) {
   return v === "\\N";

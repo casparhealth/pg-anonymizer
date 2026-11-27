@@ -1,11 +1,23 @@
 -- Post-restore check for the anonymised DB (INF-2373).
 -- Run after the anonymised dump is loaded, before the DB is snapshotted and shared to stage:
---   psql -v ON_ERROR_STOP=1 -v admin_email="$admin_email" -f validate-anonymization.sql
+--   psql -v ON_ERROR_STOP=1 -v admin_email="$admin_email" [-v anon_email_base="$anon_email_base"] -f validate-anonymization.sql
 -- Each check counts rows that still hold a value the anonymiser should have replaced.
 -- Any non-zero count raises an error, so the refresh fails instead of shipping real data.
 -- Only counts are printed, never values.
 
 SELECT set_config('anon.admin_email', :'admin_email', false);
+
+-- Optional test inbox (anon_email_base=local@domain): faked emails are then local+anon<n>@domain.
+\if :{?anon_email_base}
+\else
+  \set anon_email_base ''
+\endif
+SELECT set_config('anon.email_plus_re',
+  CASE WHEN :'anon_email_base' LIKE '%_@_%' THEN
+    '^' || regexp_replace(split_part(:'anon_email_base', '@', 1), '([.+*?^$()\[\]{}|\\])', '\\\1', 'g')
+        || '\+anon[0-9]+@'
+        || regexp_replace(split_part(:'anon_email_base', '@', 2), '([.+*?^$()\[\]{}|\\])', '\\\1', 'g') || '$'
+  ELSE 'a^' END, false);
 
 DO $$
 DECLARE
@@ -35,8 +47,8 @@ DECLARE
     -- Faked tokens are 48 hex chars; anything else came from prod.
     ['self_pay_patient_invites.token',         'SELECT count(*) FROM self_pay_patient_invites WHERE token !~ ''^[0-9a-f]{48}$'''],
     ['push_tokens.token',                      'SELECT count(*) FROM push_tokens WHERE token !~ ''^[0-9a-f]{48}$'''],
-    -- Faked emails use example.com/.net/.org; the configured admin account is kept on purpose.
-    ['accounts.email',                         'SELECT count(*) FROM accounts WHERE email IS NOT NULL AND email !~* ''@example\.(com|net|org)$'' AND email <> current_setting(''anon.admin_email'')'],
+    -- Faked emails use example.com/.net/.org or the anon_email_base plus address; the admin account is kept on purpose.
+    ['accounts.email',                         'SELECT count(*) FROM accounts WHERE email IS NOT NULL AND email !~* ''@example\.(com|net|org)$'' AND email !~* current_setting(''anon.email_plus_re'') AND email <> current_setting(''anon.admin_email'')'],
     ['clinic_infos.contact_email',             'SELECT count(*) FROM clinic_infos WHERE contact_email IS NOT NULL AND contact_email !~* ''@example\.(com|net|org)$'''],
     -- Columns found by the full audit (prod vs anonymised copy).
     ['audits.audited_changes',                 'SELECT count(*) FROM audits WHERE coalesce(audited_changes, ''{}'') <> ''{}'''],

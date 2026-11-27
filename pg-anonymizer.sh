@@ -64,7 +64,7 @@ fi
 ## 10 Verify the anonymisation
 echo "### VERIFY ANONYMISATION ###"
 echo ""
-if ! psql -v ON_ERROR_STOP=1 -v admin_email="$admin_email" -d "$PGDATABASE" -f validate-anonymization.sql; then
+if ! psql -v ON_ERROR_STOP=1 -v admin_email="$admin_email" -v anon_email_base="${anon_email_base:-}" -d "$PGDATABASE" -f validate-anonymization.sql; then
   echo "### ANONYMISATION CHECK FAILED: DO NOT SNAPSHOT OR SHARE $PGDATABASE ###"
   exit 1
 fi
